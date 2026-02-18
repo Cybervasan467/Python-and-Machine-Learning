@@ -1,17 +1,26 @@
 import numpy as np
 import PIL.Image
 import tensorflow as tf
+import os
 
 #Loads pre-trained InceptionV3 model
 model = tf.keras.applications.InceptionV3(include_top=False, weights="imagenet")
 
 #Chooses layer in model to enhance, gets tensor output of that layer, and outputs only that layer 
-layer_name = 'mixed4d_3x3_bottleneck_pre_relu'
+layer_name = 'mixed4'
 layer_output = model.get_layer(layer_name).output
 dream_model = tf.keras.Model(inputs=model.input, outputs=layer_output)
 
+# Ask user for the image path
+img_path = input("Enter the path to your image: ")
+
+# Check if file exists
+if not os.path.isfile(img_path):
+    print(f"Error: File '{img_path}' not found.")
+    exit(1)
+
 #Converts image to array of floats so that math can be done with it
-img0 = PIL.Image.open('pilatus800.jpg')
+img0 = PIL.Image.open(img_path)
 img0 = np.float32(img0)
 
 #Defines loss function for DeepDream
@@ -37,7 +46,7 @@ def render_deepdream(img, steps=10, step_size=1.5):
     return img
 
 #Calls deepdream function on original image
-dream_img = render_deepdream(img0)
+dream_img = render_deepdream(img0, steps = 50, step_size = 2.0)
 #Converts float image back to 8-bit integers for saving
 result = np.uint8(np.clip(dream_img, 0, 255))
 #Converts array back to image and saves it as png file
